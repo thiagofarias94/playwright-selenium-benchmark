@@ -50,7 +50,7 @@ jobs:
         run: |
           cd playwright-ts
           npm ci
-          npx playwright install --with-deps
+          npx playwright install --with-deps || npx playwright install
 
       - name: Run Playwright tests
         run: |

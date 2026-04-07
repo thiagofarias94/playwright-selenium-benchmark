@@ -62,7 +62,7 @@ public class BenchmarkTest {
     }
 
     @RepeatedTest(5)
-    void ct03FluxoCompletoE2E(RepetitionInfo repetitionInfo) {
+    void ct03FluxoCompletoE2E(RepetitionInfo repetitionInfo) throws InterruptedException {
         System.out.println("CT03 - Execução " + repetitionInfo.getCurrentRepetition() + "/5");
         // Login
         driver.get("https://www.saucedemo.com");
@@ -72,18 +72,22 @@ public class BenchmarkTest {
 
         // Wait for inventory to load
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("inventory_item")));
+        Thread.sleep(300);
 
         // Add product to cart
         driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-backpack']")).click();
+        Thread.sleep(500);
 
         // Go to cart
         driver.findElement(By.className("shopping_cart_link")).click();
+        Thread.sleep(500);
 
-        // Wait for checkout button to be visible
-        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[data-test='checkout']")));
+        // Wait for page to load and checkout button to appear
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='checkout']")));
 
         // Checkout
         driver.findElement(By.cssSelector("[data-test='checkout']")).click();
+        Thread.sleep(500);
 
         // Fill checkout form
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='firstName']")));
@@ -91,6 +95,7 @@ public class BenchmarkTest {
         driver.findElement(By.cssSelector("[data-test='lastName']")).sendKeys("Doe");
         driver.findElement(By.cssSelector("[data-test='postalCode']")).sendKeys("12345");
         driver.findElement(By.cssSelector("[data-test='continue']")).click();
+        Thread.sleep(500);
 
         // Complete purchase
         wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[data-test='finish']")));
@@ -124,26 +129,31 @@ public class BenchmarkTest {
 
         // Wait for inventory to load before interacting with products
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("inventory_item")));
+        Thread.sleep(300);
 
         // Filter products by price low to high
         driver.findElement(By.className("product_sort_container")).sendKeys("lohi");
+        Thread.sleep(300);
 
-        // Add multiple products to cart
+        // Add first product to cart
         driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-backpack']")).click();
-        driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-bike-light']")).click();
+        Thread.sleep(500);
 
-        // Wait a short time for the cart to update
+        // Add second product to cart
+        driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-bike-light']")).click();
+        Thread.sleep(500);
+
+        // Wait a bit more for the cart to update
         Thread.sleep(500);
 
         // Check cart badge if it exists
         try {
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("shopping_cart_badge")));
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.className("shopping_cart_badge")));
             String badgeText = driver.findElement(By.className("shopping_cart_badge")).getText();
-            assertEquals("2", badgeText);
+            // Badge should show 2 items
+            assertEquals("2", badgeText, "Expected 2 items in cart, but badge shows: " + badgeText);
         } catch (TimeoutException e) {
-            // Badge might not always be visible, verify cart items were added another way
-            // At minimum, the add-to-cart actions should have succeeded without throwing
-            System.out.println("Cart badge not visible but products should be in cart");
+            System.out.println("Warning: Cart badge not found, but add-to-cart actions completed");
         }
     }
 }

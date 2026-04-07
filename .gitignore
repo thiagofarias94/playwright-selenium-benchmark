@@ -1,0 +1,9 @@
+node_modules/
+playwright-report/
+results/
+**/target/
+**/build/
+*.log
+.DS_Store
+.idea/
+.vscode/

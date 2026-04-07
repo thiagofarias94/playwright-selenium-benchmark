@@ -1,0 +1,12 @@
+{
+  "name": "playwright-ts-benchmark",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "benchmark": "npx playwright test tests/benchmarks.spec.ts --repeat-each=5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}

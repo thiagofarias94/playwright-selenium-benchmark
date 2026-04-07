@@ -1,0 +1,50 @@
+name: Benchmark
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  benchmark:
+    name: Run full benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Playwright dependencies
+        run: |
+          cd playwright-ts
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Run benchmark script
+        run: |
+          chmod +x ./scripts/run-benchmarks.sh
+          ./scripts/run-benchmarks.sh
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: results

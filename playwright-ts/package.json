@@ -7,6 +7,7 @@
     "benchmark": "npx playwright test tests/benchmarks.spec.ts --repeat-each=5"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.0"
+    "@playwright/test": "^1.44.0",
+    "typescript": "^6.0.2"
   }
 }

@@ -110,6 +110,9 @@ public class BenchmarkTest {
         driver.findElement(By.id("password")).sendKeys("secret_sauce");
         driver.findElement(By.id("login-button")).click();
 
+        // Wait for inventory to load before interacting with products
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("inventory_item")));
+
         // Filter products by price low to high
         driver.findElement(By.className("product_sort_container")).sendKeys("lohi");
 
@@ -118,6 +121,7 @@ public class BenchmarkTest {
         driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-bike-light']")).click();
 
         // Check cart badge
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("shopping_cart_badge")));
         assertEquals("2", driver.findElement(By.className("shopping_cart_badge")).getText());
     }
 }

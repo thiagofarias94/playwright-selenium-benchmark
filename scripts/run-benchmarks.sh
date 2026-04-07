@@ -9,12 +9,14 @@ mkdir -p "$RESULT_DIR"
 echo "🚀 Iniciando Benchmark: Playwright vs Selenium"
 echo "=============================================="
 
-# Detect OS for time command compatibility
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    TIME_CMD="time"
-else
-    TIME_CMD="LC_ALL=C /usr/bin/time -l"
-fi
+# Function to run command with time measurement
+run_with_time() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        time "$@"
+    else
+        LC_ALL=C /usr/bin/time -l "$@"
+    fi
+}
 
 # Capturar tempo inicial
 START_TIME=$(date +%s)
@@ -23,7 +25,7 @@ echo "⏱️  Executando Playwright TypeScript benchmark..."
 cd "$ROOT_DIR/playwright-ts"
 npm install > /dev/null 2>&1
 PLAYWRIGHT_START=$(date +%s)
-$TIME_CMD npm run benchmark 2>&1 | tee "$RESULT_DIR/playwright-results.txt"
+run_with_time npm run benchmark 2>&1 | tee "$RESULT_DIR/playwright-results.txt"
 PLAYWRIGHT_END=$(date +%s)
 PLAYWRIGHT_DURATION=$((PLAYWRIGHT_END - PLAYWRIGHT_START))
 
@@ -31,7 +33,7 @@ echo ""
 echo "⏱️  Executando Selenium Java benchmark..."
 cd "$ROOT_DIR/selenium-java"
 SELENIUM_START=$(date +%s)
-$TIME_CMD mvn test -q 2>&1 | tee "$RESULT_DIR/selenium-results.txt"
+run_with_time mvn test -q 2>&1 | tee "$RESULT_DIR/selenium-results.txt"
 SELENIUM_END=$(date +%s)
 SELENIUM_DURATION=$((SELENIUM_END - SELENIUM_START))
 

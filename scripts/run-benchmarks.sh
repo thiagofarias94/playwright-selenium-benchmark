@@ -9,6 +9,13 @@ mkdir -p "$RESULT_DIR"
 echo "🚀 Iniciando Benchmark: Playwright vs Selenium"
 echo "=============================================="
 
+# Detect OS for time command compatibility
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    TIME_CMD="time"
+else
+    TIME_CMD="LC_ALL=C /usr/bin/time -l"
+fi
+
 # Capturar tempo inicial
 START_TIME=$(date +%s)
 
@@ -16,7 +23,7 @@ echo "⏱️  Executando Playwright TypeScript benchmark..."
 cd "$ROOT_DIR/playwright-ts"
 npm install > /dev/null 2>&1
 PLAYWRIGHT_START=$(date +%s)
-LC_ALL=C /usr/bin/time -l npm run benchmark 2>&1 | tee "$RESULT_DIR/playwright-results.txt"
+$TIME_CMD npm run benchmark 2>&1 | tee "$RESULT_DIR/playwright-results.txt"
 PLAYWRIGHT_END=$(date +%s)
 PLAYWRIGHT_DURATION=$((PLAYWRIGHT_END - PLAYWRIGHT_START))
 
@@ -24,7 +31,7 @@ echo ""
 echo "⏱️  Executando Selenium Java benchmark..."
 cd "$ROOT_DIR/selenium-java"
 SELENIUM_START=$(date +%s)
-LC_ALL=C /usr/bin/time -l mvn test -q 2>&1 | tee "$RESULT_DIR/selenium-results.txt"
+$TIME_CMD mvn test -q 2>&1 | tee "$RESULT_DIR/selenium-results.txt"
 SELENIUM_END=$(date +%s)
 SELENIUM_DURATION=$((SELENIUM_END - SELENIUM_START))
 
@@ -37,16 +44,30 @@ echo "📊 RESULTADOS FINAIS"
 echo "===================="
 
 # Extrair métricas do Playwright
-PLAYWRIGHT_TESTS=$(grep "passed" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.* \([0-9]*\) passed.*/\1/')
-PLAYWRIGHT_TIME=$(grep "passed" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.*(\([0-9.]*\)s).*/\1/')
-PLAYWRIGHT_CPU=$(grep "percent of CPU this job got" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.*: //' || true)
-PLAYWRIGHT_MEM=$(grep -E "maximum resident set size|max resident set size" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.*: //' || true)
+PLAYWRIGHT_TESTS=$(grep "passed" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.* \([0-9]*\) passed.*/\1/' || echo "N/A")
+PLAYWRIGHT_TIME=$(grep "passed" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.*(\([0-9.]*\)s).*/\1/' || echo "N/A")
+
+# Extrair métricas de sistema (disponível apenas no Linux)
+if [[ "$OSTYPE" != "darwin"* ]]; then
+    PLAYWRIGHT_CPU=$(grep "percent of CPU this job got" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.*: //' || echo "N/A")
+    PLAYWRIGHT_MEM=$(grep -E "maximum resident set size|max resident set size" "$RESULT_DIR/playwright-results.txt" | tail -1 | sed 's/.*: //' || echo "N/A")
+else
+    PLAYWRIGHT_CPU="N/A (macOS)"
+    PLAYWRIGHT_MEM="N/A (macOS)"
+fi
 
 # Extrair métricas do Selenium
-SELENIUM_TESTS=$(grep "Tests run:" "$RESULT_DIR/selenium-results.txt" | sed 's/.*Tests run: \([0-9]*\).*/\1/')
-SELENIUM_TIME=$(grep "Time elapsed:" "$RESULT_DIR/selenium-results.txt" | sed 's/.*Time elapsed: \([0-9.]*\) s.*/\1/')
-SELENIUM_CPU=$(grep "percent of CPU this job got" "$RESULT_DIR/selenium-results.txt" | tail -1 | sed 's/.*: //' || true)
-SELENIUM_MEM=$(grep -E "maximum resident set size|max resident set size" "$RESULT_DIR/selenium-results.txt" | tail -1 | sed 's/.*: //' || true)
+SELENIUM_TESTS=$(grep "Tests run:" "$RESULT_DIR/selenium-results.txt" | sed 's/.*Tests run: \([0-9]*\).*/\1/' || echo "N/A")
+SELENIUM_TIME=$(grep "Time elapsed:" "$RESULT_DIR/selenium-results.txt" | sed 's/.*Time elapsed: \([0-9.]*\) s.*/\1/' || echo "N/A")
+
+# Extrair métricas de sistema (disponível apenas no Linux)
+if [[ "$OSTYPE" != "darwin"* ]]; then
+    SELENIUM_CPU=$(grep "percent of CPU this job got" "$RESULT_DIR/selenium-results.txt" | tail -1 | sed 's/.*: //' || echo "N/A")
+    SELENIUM_MEM=$(grep -E "maximum resident set size|max resident set size" "$RESULT_DIR/selenium-results.txt" | tail -1 | sed 's/.*: //' || echo "N/A")
+else
+    SELENIUM_CPU="N/A (macOS)"
+    SELENIUM_MEM="N/A (macOS)"
+fi
 
 echo "🎭 Playwright: $PLAYWRIGHT_TESTS testes em ${PLAYWRIGHT_TIME}s"
 echo "    CPU: ${PLAYWRIGHT_CPU}"

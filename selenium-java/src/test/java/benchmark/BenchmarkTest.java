@@ -30,7 +30,7 @@ public class BenchmarkTest {
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1280,800");
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
     @AfterEach
@@ -69,23 +69,34 @@ public class BenchmarkTest {
         driver.findElement(By.id("password")).sendKeys("secret_sauce");
         driver.findElement(By.id("login-button")).click();
 
+        // Wait for inventory to load
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("inventory_item")));
+
         // Add product to cart
         driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-backpack']")).click();
 
         // Go to cart
         driver.findElement(By.className("shopping_cart_link")).click();
 
+        // Wait for checkout button to be visible
+        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[data-test='checkout']")));
+
         // Checkout
         driver.findElement(By.cssSelector("[data-test='checkout']")).click();
 
         // Fill checkout form
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='firstName']")));
         driver.findElement(By.cssSelector("[data-test='firstName']")).sendKeys("John");
         driver.findElement(By.cssSelector("[data-test='lastName']")).sendKeys("Doe");
         driver.findElement(By.cssSelector("[data-test='postalCode']")).sendKeys("12345");
         driver.findElement(By.cssSelector("[data-test='continue']")).click();
 
         // Complete purchase
+        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[data-test='finish']")));
         driver.findElement(By.cssSelector("[data-test='finish']")).click();
+        
+        // Wait for completion message
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("complete-header")));
         assertEquals("Thank you for your order!", driver.findElement(By.className("complete-header")).getText());
     }
 
@@ -120,8 +131,10 @@ public class BenchmarkTest {
         driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-backpack']")).click();
         driver.findElement(By.cssSelector("[data-test='add-to-cart-sauce-labs-bike-light']")).click();
 
-        // Check cart badge
+        // Check cart badge - wait for it to be present and visible with text "2"
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("shopping_cart_badge")));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("shopping_cart_badge")));
-        assertEquals("2", driver.findElement(By.className("shopping_cart_badge")).getText());
+        String badgeText = wait.until(ExpectedConditions.presenceOfElementLocated(By.className("shopping_cart_badge"))).getText();
+        assertEquals("2", badgeText);
     }
 }

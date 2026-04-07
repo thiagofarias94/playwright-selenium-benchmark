@@ -13,8 +13,10 @@ echo "=============================================="
 run_with_time() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         time "$@"
-    else
+    elif /usr/bin/time -l true 2>/dev/null; then
         LC_ALL=C /usr/bin/time -l "$@"
+    else
+        time -p "$@"
     fi
 }
 
